@@ -206,12 +206,10 @@
                 const column = this.columns.find(item => item._index === index);
                 if (column.sortable) {
                     const type = column._sortType;
-                    if (type === 'normal') {
-                        this.handleSort(index, 'asc');
-                    } else if (type === 'asc') {
+                    if (type === 'asc') {
                         this.handleSort(index, 'desc');
                     } else {
-                        this.handleSort(index, 'normal');
+                        this.handleSort(index, 'asc');
                     }
                 }
             },
