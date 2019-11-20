@@ -307,10 +307,6 @@
                 if (!this.draggable) return false;
 
                 const $content = this.$refs.content;
-                // 没有选中
-                if(!$content){
-                    return;
-                }
                 const rect = $content.getBoundingClientRect();
                 this.dragData.x = rect.x || rect.left;
                 this.dragData.y = rect.y || rect.top;
