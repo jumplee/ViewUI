@@ -30,6 +30,8 @@
     </div>
 </template>
 <script>
+    import throttle from 'lodash.throttle';
+
     import Icon from '../icon';
     import iButton from '../button/button.vue';
     import TransferDom from '../../directives/transfer-dom';
@@ -127,6 +129,10 @@
                 type: Number,
                 default: 1000
             },
+            autoHide:{
+                type: Boolean,
+                default:true
+            }
         },
         data () {
             return {
@@ -236,7 +242,7 @@
                 }
             },
             showMask () {
-                return this.draggable ? false : this.mask;
+                return  this.mask;
             }
         },
         methods: {
@@ -269,8 +275,13 @@
                 if (this.loading) {
                     this.buttonLoading = true;
                 } else {
-                    this.visible = false;
-                    this.$emit('input', false);
+                    // 是否自动关闭，默认自动关闭
+                    // 设置为false的情况很多，
+                    // 比如在modal中填写表格，如果填写错误就不应该关闭modal
+                    if(this.autoHide){
+                        this.visible = false;
+                        this.$emit('input', false);
+                    }
                 }
                 this.$emit('on-ok');
             },
@@ -296,6 +307,10 @@
                 if (!this.draggable) return false;
 
                 const $content = this.$refs.content;
+                // 没有选中
+                if(!$content){
+                    return;
+                }
                 const rect = $content.getBoundingClientRect();
                 this.dragData.x = rect.x || rect.left;
                 this.dragData.y = rect.y || rect.top;
@@ -313,8 +328,9 @@
                 on(window, 'mousemove', this.handleMoveMove);
                 on(window, 'mouseup', this.handleMoveEnd);
             },
-            handleMoveMove (event) {
-                if (!this.dragData.dragging) return false;
+            handleMoveMove:throttle(function (event) {
+                const me=this;
+                if (!me.dragData.dragging) return false;
 
                 const distance = {
                     x: event.clientX,
@@ -322,16 +338,17 @@
                 };
 
                 const diff_distance = {
-                    x: distance.x - this.dragData.dragX,
-                    y: distance.y - this.dragData.dragY
+                    x: distance.x - me.dragData.dragX,
+                    y: distance.y - me.dragData.dragY
                 };
 
-                this.dragData.x += diff_distance.x;
-                this.dragData.y += diff_distance.y;
+                me.dragData.x += diff_distance.x;
+                me.dragData.y += diff_distance.y;
 
-                this.dragData.dragX = distance.x;
-                this.dragData.dragY = distance.y;
-            },
+                me.dragData.dragX = distance.x;
+                me.dragData.dragY = distance.y;
+                // 18ms的节流 是为了保证动画的性能，同时避免卡顿
+            },18, {leading: false}),
             handleMoveEnd () {
                 this.dragData.dragging = false;
                 off(window, 'mousemove', this.handleMoveMove);
